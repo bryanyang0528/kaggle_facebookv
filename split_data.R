@@ -1,6 +1,7 @@
 # split the data into small pieces
 
 library(data.table)
+library(class)
 
 set.seed(123)
 file_train = "data/train.csv"
@@ -33,5 +34,18 @@ grid <- function(data, lower_x, lower_y, accuracy_threshold)
 
 
 df_train_sub <- grid(df_train, lower_x, lower_y, accuracy_threshold)
-summary(df_train_sub)
+df_test_sub <- grid(df_test, lower_x, lower_y, accuracy_threshold)
+
+feature <- c("x", "y")
+y <- "place_id"
+train <- df_train_sub[, feature, with=FALSE]
+test <- df_test_sub[, feature, with=FALSE]
+
+model_1 <- knn(train, test, df_train_sub[[y]]  , k=1, prob = TRUE)
+model_2 <- knn(train, test, df_train_sub[[y]]  , k=5, prob = TRUE)
+model_3 <- knn(train, test, df_train_sub[[y]]  , k=10, prob = TRUE)
+
+
+submission_sub <- cbind(as.character(model_1), as.character(model_2), as.character(model_3))
+
 

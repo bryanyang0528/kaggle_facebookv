@@ -22,30 +22,39 @@ accuracy_threshold <- 27
 lower_x <- min_mar
 lower_y <- min_mar
 
+
+df_train_sub <- grid(df_train, lower_x, lower_y, accuracy_threshold)
+df_test_sub <- grid(df_test, lower_x, lower_y, accuracy_threshold)
+
+
+
+submission_sub <- submission(df_train_sub, df_test_sub)
+
+
 grid <- function(data, lower_x, lower_y, accuracy_threshold)
 {
   upper_x <- lower_x + margin
   upper_y <- lower_y + margin
   data_sub <- data[(data$x >= lower_x & data$x < upper_x-0.0005
-                & data$y >= lower_y & data$y < upper_y-0.0005
-                & data$accuracy > accuracy_threshold),]
+                    & data$y >= lower_y & data$y < upper_y-0.0005
+                    & data$accuracy > accuracy_threshold),]
   return(data_sub)
 }
 
 
-df_train_sub <- grid(df_train, lower_x, lower_y, accuracy_threshold)
-df_test_sub <- grid(df_test, lower_x, lower_y, accuracy_threshold)
-
-feature <- c("x", "y")
-y <- "place_id"
-train <- df_train_sub[, feature, with=FALSE]
-test <- df_test_sub[, feature, with=FALSE]
-
-model_1 <- knn(train, test, df_train_sub[[y]]  , k=1, prob = TRUE)
-model_2 <- knn(train, test, df_train_sub[[y]]  , k=5, prob = TRUE)
-model_3 <- knn(train, test, df_train_sub[[y]]  , k=10, prob = TRUE)
-
-
-submission_sub <- cbind(as.character(model_1), as.character(model_2), as.character(model_3))
-
-
+submission <- function (train, test){
+  
+  feature <- c("x", "y")
+  y <- "place_id"
+  train <- train[, feature, with=FALSE]
+  test <- test[, feature, with=FALSE]
+  
+  model_1 <- knn(train, test, df_train_sub[[y]]  , k=1, prob = TRUE)
+  model_2 <- knn(train, test, df_train_sub[[y]]  , k=5, prob = TRUE)
+  model_3 <- knn(train, test, df_train_sub[[y]]  , k=10, prob = TRUE)
+  submission <- cbind(as.character(model_1), as.character(model_2), as.character(model_3))
+  submission <- data.table(submission)
+  submission$place_id <- paste(submission$V1, submission$V2, submission$V3, sep =" ") 
+  
+  return(submission[,"place_id", with=FALSE])
+}

@@ -28,7 +28,7 @@ df_test_sub <- grid(df_test, lower_x, lower_y, accuracy_threshold)
 submission_sub <- submission(df_train_sub, df_test_sub)
 
 
-grid <- function(data, lower_x, lower_y, accuracy_threshold)
+grid <- function(data, lower_x, lower_y, accuracy_threshold=-1)
 {
   upper_x <- lower_x + margin
   upper_y <- lower_y + margin
@@ -60,9 +60,3 @@ submission <- function (train, test){
   
   return(submission[,c("row_id","place_id"), with=FALSE])
 }
-
-cols=c("row_id", "row_id")
-setDT(submission_sub)[, x := Reduce(function(...) paste(..., sep = "-"), .SD[, mget(cols)])]
-
-
-colnames(df_test)[2:length(df_test)]

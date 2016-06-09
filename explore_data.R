@@ -2,6 +2,8 @@ library(data.table)
 library(class)
 library(dplyr)
 library(xgboost)
+library(randomForest)
+library(rpart)
 
 set.seed(123)
 file_train = "data/train.csv"
@@ -22,7 +24,7 @@ hist(df_train$time)
 hist(df_train$accuracy)
 
 # feature engineering 
-df_train <- df_train[df_train$accuracy>27,]
+df_train_1q <- df_train[df_train$accuracy>27,]
 
 
 
@@ -55,7 +57,6 @@ nrows <- nrow(df_train)
 smp_size <- floor(0.75 * nrows)
 ## set the seed to make your partition reproductible
 train_ind <- sample(seq_len(nrows), size = smp_size)
-
 train <- df_train[train_ind]
 test <- df_train[-train_ind]
 
@@ -67,4 +68,32 @@ dtrain <- xgb.DMatrix(data = as.matrix(train[, col, with=FALSE]),
 bst <- xgboost(data = dtrain, max.depth=2, eta =1, objective = "multi:softmax", nrounds = 2)
 
 
-# random forest 
+# random forest   rows數太多無法使用
+
+df_train_rf <- df_train_1q
+
+nrows <- nrow(df_train_rf)
+smp_size <- floor(0.75 * nrows)
+## set the seed to make your partition reproductible
+train_ind <- sample(seq_len(nrows), size = smp_size)
+train <- df_train_rf[train_ind]
+test <- df_train_rf[-train_ind]
+
+train$place_id <- as.factor(train$place_id) 
+
+model.rf <- randomForest(place_id ~ x + y  , data=train, importance=FALSE,
+                        proximity=TRUE)
+
+#print(model.rf)
+#str(model.rf)
+#round(importance(model.rf), 2)
+
+test_pred <- predict(model.rf, test[,c("x", "y"), with=FALSE])
+test_y <- test[["place_id"]]
+
+sum(test_pred == test_y) / length(test_pred)
+
+
+# decision tree
+control=rpart.control(minsplit=30, cp=0.001) 
+model.dt <- rpart(place_id ~ x + y, data = train, method = "class", control = control  ) 

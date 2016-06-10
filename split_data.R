@@ -28,18 +28,24 @@ df_test_sub <- grid(df_test, lower_x, lower_y, accuracy_threshold)
 submission_sub <- submission(df_train_sub, df_test_sub)
 
 
-grid <- function(data, lower_x, lower_y, accuracy_threshold=-1)
+grid <- function(data, lower_x, lower_y, margin=0.5, accuracy_threshold=-1)
 {
-  upper_x <- lower_x + margin
-  upper_y <- lower_y + margin
-  data_sub <- data[(data$x >= lower_x & data$x < upper_x-0.0005
-                    & data$y >= lower_y & data$y < upper_y-0.0005
+  upper_x <- lower_x + margin - 0.00005
+  upper_y <- lower_y + margin - 0.00005
+  
+  if (lower_x >= max_mar-margin) {upper_x <- 11}
+  if (lower_y == max_mar-margin) {upper_y <- 11}
+  
+  print(paste("upper_x: ", upper_x))
+  print(paste("upper_y: ", upper_y))
+  data_sub <- data[(data$x >= lower_x & data$x < upper_x
+                    & data$y >= lower_y & data$y < upper_y
                     & data$accuracy > accuracy_threshold),]
   return(data_sub)
 }
 
 
-submission <- function (train, test){
+submission <- function (train, test, k_list){
   
   feature <- c("x", "y")
   y <- "place_id"
@@ -47,9 +53,9 @@ submission <- function (train, test){
   test_x <- test[, feature, with=FALSE]
   test_id <- test[, "row_id", with=FALSE]
   
-  model_1 <- knn(train, test_x, df_train_sub[[y]]  , k=1, prob = TRUE)
-  model_2 <- knn(train, test_x, df_train_sub[[y]]  , k=5, prob = TRUE)
-  model_3 <- knn(train, test_x, df_train_sub[[y]]  , k=10, prob = TRUE)
+  model_1 <- knn(train, test_x, df_train_sub[[y]]  , k=k_list[1], prob = TRUE)
+  model_2 <- knn(train, test_x, df_train_sub[[y]]  , k=k_list[2], prob = TRUE)
+  model_3 <- knn(train, test_x, df_train_sub[[y]]  , k=k_list[3], prob = TRUE)
   
   submission <- cbind(test_id, as.character(model_1), as.character(model_2), as.character(model_3))
   submission <- data.table(submission)

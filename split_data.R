@@ -12,7 +12,6 @@ df_train <- fread(file_train, header = TRUE, nrows = nrows, integer64 = "charact
 df_test <- fread(file_test, header = TRUE, nrows = nrows, integer64 = "character", 
                  colClasses=c("character", "numeric", "numeric", "integer", "NULL"))
 
-summary(df_train)
 
 margin <- 0.5
 min_mar <- 0
@@ -45,9 +44,15 @@ grid <- function(data, lower_x, lower_y, margin=0.5, accuracy_threshold=-1)
 }
 
 
-submission <- function (train, test, k_list){
+submission <- function (train, test, k_list, w_list){
   
-  feature <- c("x", "y")
+  train$x_w <- train$x * w_list[1]
+  train$y_w <- train$y * w_list[2]
+  
+  test$x_w <- test$x * w_list[1]
+  test$y_w <- test$y * w_list[2]
+  
+  feature <- c("x_w", "y_w")
   y <- "place_id"
   train <- train[, feature, with=FALSE]
   test_x <- test[, feature, with=FALSE]
